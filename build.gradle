@@ -68,7 +68,7 @@ repositories {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'com.xlilium.perf.delivery.qa.App',
+        attributes 'Main-Class': 'com.xlilium.perf.qa.App',
                 'Implementaion-version': version
     }
     baseName = project.name

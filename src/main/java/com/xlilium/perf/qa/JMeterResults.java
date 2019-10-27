@@ -10,8 +10,12 @@ import java.util.Comparator;
 import java.util.List;
 
 import com.google.gson.GsonBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JMeterResults {
+    private static final Logger logger = LoggerFactory.getLogger(JMeterResults.class);
+
     private List<JMeterSample> jMeterSamples = new ArrayList<>();
     private List<JMeterSampleBucket> jMeterSampleBuckets = new ArrayList<>();
     private List<JMeterResultStat> rampStats = new ArrayList<>();
@@ -134,15 +138,14 @@ public class JMeterResults {
         }
 
         for (JMeterSampleBucket bucket : jMeterSampleBuckets) {
+            // Bucket ID is timestamp in seconds
             if (bucket.getBucketId() == sample.getBucketId() && bucket.getLabel().equals(sample.getLabel_lb())) {
                 bucket.setBucketSampleCount(bucket.getBucketSampleCount() + 1);
                 bucket.setTotalBytesSent(bucket.getTotalBytesSent() + sample.getSentBytes_successful_sby());
                 bucket.setTotalPayloadBytesSent(bucket.getTotalPayloadBytesSent() + sample.getPayloadSize());
 
-                bucket.setBucketSuccessfulSampleCount(bucket.getBucketSuccessfulSampleCount() +
-                        (sample.isSuccess_s() ? 1 : 0));
-                bucket.setBucketFailedSampleCount(bucket.getBucketFailedSampleCount() +
-                        (!sample.isSuccess_s() ? 1 : 0));
+                bucket.setBucketSuccessfulSampleCount(bucket.getBucketSuccessfulSampleCount() + (sample.isSuccess_s() ? 1 : 0));
+                bucket.setBucketFailedSampleCount(bucket.getBucketFailedSampleCount() + (!sample.isSuccess_s() ? 1 : 0));
 
                 bucket.addActiveThreads(sample.getActiveThreadCount_na());
 
@@ -176,6 +179,8 @@ public class JMeterResults {
             }
 
             jMeterSampleBucket.addReturnCode(sample.getResponseCode_rc());
+
+            logger.info("Adding new bucket: {}", jMeterSampleBucket.getLabel());
 
             jMeterSampleBuckets.add(jMeterSampleBucket);
         }

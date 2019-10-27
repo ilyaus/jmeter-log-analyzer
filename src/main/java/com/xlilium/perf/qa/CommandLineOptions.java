@@ -41,7 +41,7 @@ public class CommandLineOptions {
                 retValue = "result.log";
                 break;
             case JMETER_RAMP_DURATION:
-                retValue = "600";
+                retValue = "0";
         }
 
         return retValue;

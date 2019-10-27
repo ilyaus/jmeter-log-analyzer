@@ -17,7 +17,6 @@ import java.util.zip.ZipInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import static com.xlilium.perf.qa.CommandLineOptions.JMETER_LOG_FILE_XML;
 import static com.xlilium.perf.qa.CommandLineOptions.JMETER_RAMP_DURATION;
 import static java.lang.System.exit;
@@ -55,7 +54,7 @@ public class JMeterLogAnalyzer {
     jMeterRampDuration =
             Integer.parseInt(commandLine.hasOption(JMETER_RAMP_DURATION) ?
                     commandLine.getOptionValue(JMETER_RAMP_DURATION) :
-                    CommandLineOptions.getDefault(JMETER_RAMP_DURATION));
+                    CommandLineOptions.getDefault(jMeterResultsConfig.getConfig("jmeter-logs.ramp-duration")));
 
     return processLocalLog(jMeterXMLLog, jMeterRampDuration);
   }
@@ -78,6 +77,9 @@ public class JMeterLogAnalyzer {
     currentTime = sdf.format(new Date());
     String reportFileName = baseFolder + File.separator + "report-" + currentTime + ".json";
 
+    String baseloadSamplerName = jMeterResultsConfig.getConfig("jmeter-logs.baseload-sampler-name");
+    String loadSamplerName = jMeterResultsConfig.getConfig("jmeter-logs.load-sampler-name");
+
     JMeterXMLLogParser jMeterXMLLogParser = new JMeterXMLLogParser();
 
     try {
@@ -85,8 +87,8 @@ public class JMeterLogAnalyzer {
 
       // System.out.println("Finished reading log file: " + jMeterResults.getSampleCount());
 
-      jMeterResults.addStats("HTTP_Baseload_Request");
-      jMeterResults.addStats("HTTP_Ramp_Request", jMeterRampDuration);
+      jMeterResults.addStats(baseloadSamplerName);
+      jMeterResults.addStats(loadSamplerName, jMeterRampDuration);
 
       jMeterResults.writeJsonReport(reportFileName);
 
