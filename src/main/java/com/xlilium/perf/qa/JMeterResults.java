@@ -2,6 +2,7 @@ package com.xlilium.perf.qa;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -231,7 +232,8 @@ public class JMeterResults {
                 .toJson(rampStats);
 
         try {
-            Files.write(file, jsonSummary.getBytes("utf8"));
+            Files.write(file, jsonSummary.getBytes(StandardCharsets.UTF_8));
+            logger.info("Json report file created: {}", fileName);
         } catch (UnsupportedEncodingException e) {
             System.err.println("Cannot encode report string");
             e.printStackTrace();

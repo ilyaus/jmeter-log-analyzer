@@ -54,7 +54,7 @@ public class JMeterLogAnalyzer {
     jMeterRampDuration =
             Integer.parseInt(commandLine.hasOption(JMETER_RAMP_DURATION) ?
                     commandLine.getOptionValue(JMETER_RAMP_DURATION) :
-                    CommandLineOptions.getDefault(jMeterResultsConfig.getConfig("jmeter-logs.ramp-duration")));
+                    jMeterResultsConfig.getConfig("jmeter-logs.ramp-duration"));
 
     return processLocalLog(jMeterXMLLog, jMeterRampDuration);
   }
