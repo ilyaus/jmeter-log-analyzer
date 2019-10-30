@@ -75,7 +75,7 @@ public class JMeterLogAnalyzer {
     baseFolder = Paths.get(jMeterXMLLog).getParent().toString();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-mm-dd_HHmmss");
     currentTime = sdf.format(new Date());
-    String reportFileName = baseFolder + File.separator + "report-" + currentTime + ".json";
+    String reportFileName = baseFolder + File.separator + "report.json";
 
     String baseloadSamplerName = jMeterResultsConfig.getConfig("jmeter-logs.baseload-sampler-name");
     String loadSamplerName = jMeterResultsConfig.getConfig("jmeter-logs.load-sampler-name");
