@@ -16,6 +16,8 @@ public class JMeterSample {
     private int ng;
     private int activeThreadCount_na;
     private int payloadSize;
+    private int sentPayloadSize;
+    private int receivedPayloadSize;
     private String sampleUrl;
 
     private long bucketId;
@@ -175,5 +177,25 @@ public class JMeterSample {
 
     public void setPayloadSize(int payloadSize) {
         this.payloadSize = payloadSize;
+    }
+
+    public String getSampleUrlParam(String urlParameter) {
+        try {
+            String[] urlParams = getSampleUrl().split("\\?");
+
+            if (urlParams.length == 2) {
+                String[] params = urlParams[1].split("&");
+                for (String param : params) {
+                    String[] keyValuePair = param.split("=");
+                    if (keyValuePair[0].equals(urlParameter)) {
+                        return keyValuePair[1];
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            System.err.println("Failed to get URL parameter " + urlParameter + "  from " + getSampleUrl());
+        }
+
+        return "";
     }
 }

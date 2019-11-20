@@ -6,22 +6,23 @@ import com.typesafe.config.ConfigFactory;
 import java.util.List;
 
 public class JMeterResultsConfig {
-    private Config config;
-    private static final String CONFIG_ROOT = "jmeter.logs";
 
-    JMeterResultsConfig(String configFile) {
-        loadConfig(configFile);
-    }
+  private Config config;
+  private static final String CONFIG_ROOT = "jmeter.logs";
 
-    public void loadConfig(String configFile) {
-        config = ConfigFactory.load(configFile).getConfig(CONFIG_ROOT);
-    }
+  JMeterResultsConfig(String configFile) {
+    loadConfig(configFile);
+  }
 
-    public String getConfig(String configItem) {
-        return config != null ? config.getString(configItem) : null;
-    }
+  public void loadConfig(String configFile) {
+    config = ConfigFactory.load(configFile).getConfig(CONFIG_ROOT);
+  }
 
-    public List<String> getStringList(String configItem) {
-        return config != null ? config.getStringList(configItem) : null;
-    }
+  public String getConfig(String configItem) {
+    return System.getProperty(configItem, config != null ? config.getString(configItem) : null);
+  }
+
+  public List<String> getStringList(String configItem) {
+    return config != null ? config.getStringList(configItem) : null;
+  }
 }

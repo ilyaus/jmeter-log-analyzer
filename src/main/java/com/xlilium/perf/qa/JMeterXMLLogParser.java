@@ -128,10 +128,14 @@ public class JMeterXMLLogParser extends DefaultHandler {
                 break;
 
             case JMETER_REQUEST_HEADER_TAG:
-                jMeterSample.setPayloadSize(getContentLength(xmlText.toString()));
+                if (jMeterSample != null) {
+                    jMeterSample.setPayloadSize(getContentLength(xmlText.toString()));
+                }
 
             case JMETER_RESPONSE_HEADER_TAG:
-                jMeterSample.setPayloadSize(getContentLength(xmlText.toString()));
+                if (jMeterSample != null) {
+                    jMeterSample.setPayloadSize(getContentLength(xmlText.toString()));
+                }
         }
     }
 
@@ -189,9 +193,9 @@ public class JMeterXMLLogParser extends DefaultHandler {
     private int getContentLength(String responseHeader) {
         return Integer.parseInt(
             Arrays.stream(responseHeader.split("\n"))
-                    .filter(s -> s.startsWith("Content-Length"))
-                    .findFirst().orElse("Content-Length: -1")
-                    .split(":")[1].trim()
+                .filter(s -> s.startsWith("Content-Length"))
+                .findFirst().orElse("Content-Length: -1")
+                .split(":")[1].trim()
         );
     }
 }

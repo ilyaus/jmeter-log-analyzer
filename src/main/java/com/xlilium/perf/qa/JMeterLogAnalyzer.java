@@ -91,6 +91,8 @@ public class JMeterLogAnalyzer {
       jMeterResults.addStats(loadSamplerName, jMeterRampDuration);
 
       jMeterResults.writeJsonReport(reportFileName);
+      jMeterResults.printSummary();
+      jMeterResults.printCsvSummary(baseFolder + File.separator + "report.csv");
 
     } catch (FileNotFoundException ex) {
       LOG.error("Needed file not found in logs.");
@@ -136,7 +138,6 @@ public class JMeterLogAnalyzer {
     final String s3Results = jMeterResultsConfig.getConfig("s3-results.key");
     final String tmpFolder = jMeterResultsConfig.getConfig("tmp-folder.name");
     final List<String> resultFilesToUpload = jMeterResultsConfig.getStringList("jmeter-files-to-upload");
-
 
     AwsS3 awsS3 = new AwsS3(s3Name);
 
@@ -358,7 +359,7 @@ public class JMeterLogAnalyzer {
           Matcher close_m = close.matcher(line.trim());
 
           if (open_m.find()) {
-            LOG.info("Found opening tag: {}", open_m.group(1));
+            LOG.debug("Found opening tag: {}", open_m.group(1));
             st.push(open_m.group(1));
 
             outFileBw.write(line + "\n");
@@ -367,7 +368,7 @@ public class JMeterLogAnalyzer {
 
           if (close_m.find()) {
             if (st.peek().equals(close_m.group(1))) {
-              LOG.info("Found matching closing tag: {}", close_m.group(1));
+              LOG.debug("Found matching closing tag: {}", close_m.group(1));
               st.pop();
 
               outFileBw.write(line + "\n");

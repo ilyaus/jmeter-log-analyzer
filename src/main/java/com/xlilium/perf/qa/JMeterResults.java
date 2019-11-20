@@ -28,6 +28,8 @@ public class JMeterResults {
     public void addSample(JMeterSample sample) {
         jMeterSampleCount++;
         updateBuckets(sample);
+
+        jMeterSamples.add(sample);
     }
 
     public void addStats(String label, int durationInSeconds) {
@@ -37,8 +39,6 @@ public class JMeterResults {
 
         jMeterSampleBuckets.sort(Comparator.comparing(JMeterSampleBucket::getBucketId));
         List<JMeterSampleBucket> buckets = filterBucketsByLabel(jMeterSampleBuckets, label);
-
-        //System.out.println("Found: " + buckets.size() + " buckets");
 
         JMeterResultStat jMeterResultStat = new JMeterResultStat(label + "-" + statCount, durationInSeconds);
 
@@ -150,7 +150,7 @@ public class JMeterResults {
 
                 bucket.addActiveThreads(sample.getActiveThreadCount_na());
 
-                if (sample.isSuccess_s()) {
+                if (sample.isSuccess_s() || sample.getResponseCode_rc().equals("400")) {
                     bucket.addLatency(sample.getLatency_lt());
                 }
 
@@ -175,13 +175,13 @@ public class JMeterResults {
 
             jMeterSampleBucket.addActiveThreads(sample.getActiveThreadCount_na());
 
-            if (sample.isSuccess_s()) {
+            if (sample.isSuccess_s() || sample.getResponseCode_rc().equals("400")) {
                 jMeterSampleBucket.addLatency(sample.getLatency_lt());
             }
 
             jMeterSampleBucket.addReturnCode(sample.getResponseCode_rc());
 
-            logger.info("Adding new bucket: {}", jMeterSampleBucket.getLabel());
+            logger.debug("Adding new bucket: {}", jMeterSampleBucket.getLabel());
 
             jMeterSampleBuckets.add(jMeterSampleBucket);
         }
@@ -190,7 +190,7 @@ public class JMeterResults {
     }
 
     public void printSummary() {
-        //System.out.println("Got: " + jMeterSamples.size() + " samples.");
+        System.out.println("Got: " + jMeterSamples.size() + " samples.");
 
         /*
         for (JMeterSample sample : jMeterSamples) {
@@ -220,6 +220,34 @@ public class JMeterResults {
         //    stat.printStat();
         //}
 
+    }
+
+    public void printCsvSummary(String fileName) {
+        List<String> csvLines = new ArrayList<>();
+
+        csvLines.add("TimeStamp,URL,ResponseCode,isSuccess,Latency,LoadTime,SentBytes,ReceivedBytes");
+
+        for (JMeterSample sample : jMeterSamples) {
+            csvLines.add(
+                    sample.getTimeStamp_ts() + "," +
+                    sample.getSampleUrl() + "," +
+                    sample.getResponseCode_rc() + "," +
+                    sample.isSuccess_s() + "," +
+                    sample.getLatency_lt() + "," +
+                    sample.getLoadTime_t() + "," +
+                    sample.getSentBytes_sby() + "," +
+                    sample.getRecievedBytes_by() + "," +
+                    sample.getSampleUrlParam("X-Cat-API-Tracking-Id"));
+        }
+
+        Path file = Paths.get(fileName);
+        try {
+            Files.write(file, csvLines, StandardCharsets.UTF_8);
+            logger.info("CSV report file created: {}", fileName);
+        } catch (IOException ex) {
+            logger.error("Cannot create CSV report file");
+            ex.printStackTrace();
+        }
     }
 
     public void writeJsonReport(String fileName) {
