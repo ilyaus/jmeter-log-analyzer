@@ -145,8 +145,8 @@ public class JMeterResults {
                 bucket.setTotalBytesSent(bucket.getTotalBytesSent() + sample.getSentBytes_successful_sby());
                 bucket.setTotalPayloadBytesSent(bucket.getTotalPayloadBytesSent() + sample.getPayloadSize());
 
-                bucket.setBucketSuccessfulSampleCount(bucket.getBucketSuccessfulSampleCount() + (sample.isSuccess_s() ? 1 : 0));
-                bucket.setBucketFailedSampleCount(bucket.getBucketFailedSampleCount() + (!sample.isSuccess_s() ? 1 : 0));
+                bucket.setBucketSuccessfulSampleCount(bucket.getBucketSuccessfulSampleCount() + (isSuccess(sample) ? 1 : 0));
+                bucket.setBucketFailedSampleCount(bucket.getBucketFailedSampleCount() + (!isSuccess(sample)? 1 : 0));
 
                 bucket.addActiveThreads(sample.getActiveThreadCount_na());
 
@@ -170,8 +170,8 @@ public class JMeterResults {
             jMeterSampleBucket.setTotalBytesSent(sample.getSentBytes_successful_sby());
             jMeterSampleBucket.setTotalPayloadBytesSent(sample.getPayloadSize());
 
-            jMeterSampleBucket.setBucketSuccessfulSampleCount((sample.isSuccess_s() ? 1 : 0));
-            jMeterSampleBucket.setBucketFailedSampleCount((!sample.isSuccess_s() ? 1 : 0));
+            jMeterSampleBucket.setBucketSuccessfulSampleCount((isSuccess(sample) ? 1 : 0));
+            jMeterSampleBucket.setBucketFailedSampleCount((!isSuccess(sample) ? 1 : 0));
 
             jMeterSampleBucket.addActiveThreads(sample.getActiveThreadCount_na());
 
@@ -187,6 +187,14 @@ public class JMeterResults {
         }
 
         global_print_count++;
+    }
+
+    private Boolean isSuccess(JMeterSample sample) {
+        if (sample.getResponseCode_rc().equals("429")) {
+            return true;
+        }
+
+        return sample.isSuccess_s();
     }
 
     public void printSummary() {
