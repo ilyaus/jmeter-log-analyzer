@@ -225,7 +225,7 @@ public class JMeterResults {
     public void printCsvSummary(String fileName) {
         List<String> csvLines = new ArrayList<>();
 
-        csvLines.add("TimeStamp,URL,ResponseCode,isSuccess,Latency,LoadTime,SentBytes,ReceivedBytes");
+        csvLines.add("TimeStamp,URL,ResponseCode,isSuccess,Latency,LoadTime,SentBytes,ReceivedBytes,X-Cat-API-Tracking-Id");
 
         for (JMeterSample sample : jMeterSamples) {
             csvLines.add(
