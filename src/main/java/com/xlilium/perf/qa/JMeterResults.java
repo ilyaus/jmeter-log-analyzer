@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -24,6 +25,15 @@ public class JMeterResults {
     private int jMeterSampleCount = 0;
     private final int MAX_PRINT_COUNT = 0;
     private int global_print_count = 0;
+    private String successCodes;
+
+    public String getSuccessCodes() {
+        return successCodes;
+    }
+
+    public void setSuccessCodes(String successCodes) {
+        this.successCodes = successCodes;
+    }
 
     public void addSample(JMeterSample sample) {
         jMeterSampleCount++;
@@ -145,8 +155,8 @@ public class JMeterResults {
                 bucket.setTotalBytesSent(bucket.getTotalBytesSent() + sample.getSentBytes_successful_sby());
                 bucket.setTotalPayloadBytesSent(bucket.getTotalPayloadBytesSent() + sample.getPayloadSize());
 
-                bucket.setBucketSuccessfulSampleCount(bucket.getBucketSuccessfulSampleCount() + (sample.isSuccess_s() ? 1 : 0));
-                bucket.setBucketFailedSampleCount(bucket.getBucketFailedSampleCount() + (!sample.isSuccess_s() ? 1 : 0));
+                bucket.setBucketSuccessfulSampleCount(bucket.getBucketSuccessfulSampleCount() + (isSuccess(sample) ? 1 : 0));
+                bucket.setBucketFailedSampleCount(bucket.getBucketFailedSampleCount() + (!isSuccess(sample)? 1 : 0));
 
                 bucket.addActiveThreads(sample.getActiveThreadCount_na());
 
@@ -170,8 +180,8 @@ public class JMeterResults {
             jMeterSampleBucket.setTotalBytesSent(sample.getSentBytes_successful_sby());
             jMeterSampleBucket.setTotalPayloadBytesSent(sample.getPayloadSize());
 
-            jMeterSampleBucket.setBucketSuccessfulSampleCount((sample.isSuccess_s() ? 1 : 0));
-            jMeterSampleBucket.setBucketFailedSampleCount((!sample.isSuccess_s() ? 1 : 0));
+            jMeterSampleBucket.setBucketSuccessfulSampleCount((isSuccess(sample) ? 1 : 0));
+            jMeterSampleBucket.setBucketFailedSampleCount((!isSuccess(sample) ? 1 : 0));
 
             jMeterSampleBucket.addActiveThreads(sample.getActiveThreadCount_na());
 
@@ -187,6 +197,18 @@ public class JMeterResults {
         }
 
         global_print_count++;
+    }
+
+    private Boolean isSuccess(JMeterSample sample) {
+        String[] codes = successCodes.split(",");
+
+        for (String code : codes) {
+            if (sample.getResponseCode_rc().equals(code)) {
+                return true;
+            }
+        }
+
+        return sample.isSuccess_s();
     }
 
     public void printSummary() {
