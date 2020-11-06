@@ -5,6 +5,7 @@ import org.apache.commons.cli.*;
 public class CommandLineOptions {
     static final String JMETER_LOG_FILE_XML = "jmeter-log-file";
     static final String JMETER_RAMP_DURATION = "jmeter-ramp-duration";
+    static final String JMETER_SUCCESS_CODES = "jmeter-success-codes";
 
     private static CommandLine parseArguments(String[] args, Options options) {
         CommandLineParser parser = new DefaultParser();
@@ -30,6 +31,12 @@ public class CommandLineOptions {
         jmeterRampDuration.setRequired(false);
         options.addOption(jmeterRampDuration);
 
+        final Option jmeterSuccessCodes = new Option("c", JMETER_SUCCESS_CODES,
+            true, "JMeter success codes");
+        jmeterSuccessCodes.setRequired(false);
+        options.addOption(jmeterSuccessCodes);
+
+
         return parseArguments(args, options);
     }
 
@@ -38,10 +45,14 @@ public class CommandLineOptions {
 
         switch (optionName) {
             case JMETER_LOG_FILE_XML:
-                retValue = "result.log";
+                retValue = "";
                 break;
             case JMETER_RAMP_DURATION:
                 retValue = "0";
+                break;
+            case JMETER_SUCCESS_CODES:
+                retValue = "429";
+                break;
         }
 
         return retValue;

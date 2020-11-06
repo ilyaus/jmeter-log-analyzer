@@ -34,8 +34,10 @@ public class JMeterXMLLogParser extends DefaultHandler {
     private final int MAX_PRINT_COUNT = 0;
     private int global_print_count = 0;
 
-    JMeterResults readDataFromXML(String fileName)
+    JMeterResults readDataFromXML(String fileName, String successCodes)
             throws ParserConfigurationException, SAXException, IOException {
+
+        jMeterResults.setSuccessCodes(successCodes);
 
         SAXParserFactory factory = SAXParserFactory.newInstance();
         SAXParser parser = factory.newSAXParser();

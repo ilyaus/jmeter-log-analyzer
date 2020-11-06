@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -24,6 +25,15 @@ public class JMeterResults {
     private int jMeterSampleCount = 0;
     private final int MAX_PRINT_COUNT = 0;
     private int global_print_count = 0;
+    private String successCodes;
+
+    public String getSuccessCodes() {
+        return successCodes;
+    }
+
+    public void setSuccessCodes(String successCodes) {
+        this.successCodes = successCodes;
+    }
 
     public void addSample(JMeterSample sample) {
         jMeterSampleCount++;
@@ -190,8 +200,12 @@ public class JMeterResults {
     }
 
     private Boolean isSuccess(JMeterSample sample) {
-        if (sample.getResponseCode_rc().equals("429")) {
-            return true;
+        String[] codes = successCodes.split(",");
+
+        for (String code : codes) {
+            if (sample.getResponseCode_rc().equals(code)) {
+                return true;
+            }
         }
 
         return sample.isSuccess_s();

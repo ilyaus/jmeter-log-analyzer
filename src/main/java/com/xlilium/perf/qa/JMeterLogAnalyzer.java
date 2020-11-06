@@ -17,13 +17,13 @@ import java.util.zip.ZipInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.xlilium.perf.qa.CommandLineOptions.JMETER_LOG_FILE_XML;
-import static com.xlilium.perf.qa.CommandLineOptions.JMETER_RAMP_DURATION;
+import static com.xlilium.perf.qa.CommandLineOptions.*;
 import static java.lang.System.exit;
 
 public class JMeterLogAnalyzer {
   private String jMeterXMLLog;
   private int jMeterRampDuration;
+  private String jMeterSuccessCodes;
   private String baseFolder = "";
   private String currentTime;
 
@@ -37,41 +37,48 @@ public class JMeterLogAnalyzer {
   If no parameters are passed, JMeter logs are checked and processed from S3 location
    */
   public void run(String[] args) {
+    /*
+    Get command line options.
+    - If JMeter log file is passed as a parameter, that file should be processed.
+    - If log file is not passed, JMeter logs are checked and processed from S3 location.
+     */
     CommandLine commandLine = CommandLineOptions.getCommandLineArguments(args);
 
-    if (commandLine.hasOption(JMETER_LOG_FILE_XML)) {
-      processLocalLog(commandLine);
+    jMeterXMLLog = commandLine.hasOption(JMETER_LOG_FILE_XML) ?
+        commandLine.getOptionValue(JMETER_LOG_FILE_XML) :
+        CommandLineOptions.getDefault(JMETER_LOG_FILE_XML);
+
+    jMeterRampDuration =
+        Integer.parseInt(commandLine.hasOption(JMETER_RAMP_DURATION) ?
+            commandLine.getOptionValue(JMETER_RAMP_DURATION) :
+            jMeterResultsConfig.getConfig("jmeter-logs.ramp-duration"));
+
+    jMeterSuccessCodes = commandLine.hasOption(JMETER_SUCCESS_CODES) ?
+        commandLine.getOptionValue(JMETER_SUCCESS_CODES) :
+        jMeterResultsConfig.getConfig("jmeter-logs.success-codes");
+
+    if (jMeterXMLLog.isEmpty()) {
+      processS3Logs(jMeterSuccessCodes);
     } else {
-      processS3Logs();
+      processLocalLog(jMeterXMLLog, jMeterRampDuration, jMeterSuccessCodes);
     }
   }
 
-  private String processLocalLog(CommandLine commandLine) {
-    jMeterXMLLog = commandLine.hasOption(JMETER_LOG_FILE_XML) ?
-            commandLine.getOptionValue(JMETER_LOG_FILE_XML) :
-            CommandLineOptions.getDefault(JMETER_LOG_FILE_XML);
+//  private String processLocalLog(CommandLine commandLine) {
+//    jMeterXMLLog = commandLine.hasOption(JMETER_LOG_FILE_XML) ?
+//            commandLine.getOptionValue(JMETER_LOG_FILE_XML) :
+//            CommandLineOptions.getDefault(JMETER_LOG_FILE_XML);
+//
+//    jMeterRampDuration =
+//            Integer.parseInt(commandLine.hasOption(JMETER_RAMP_DURATION) ?
+//                    commandLine.getOptionValue(JMETER_RAMP_DURATION) :
+//                    jMeterResultsConfig.getConfig("jmeter-logs.ramp-duration"));
+//
+//    return processLocalLog(jMeterXMLLog, jMeterRampDuration);
+//  }
 
-    jMeterRampDuration =
-            Integer.parseInt(commandLine.hasOption(JMETER_RAMP_DURATION) ?
-                    commandLine.getOptionValue(JMETER_RAMP_DURATION) :
-                    jMeterResultsConfig.getConfig("jmeter-logs.ramp-duration"));
 
-    return processLocalLog(jMeterXMLLog, jMeterRampDuration);
-  }
-
-  private String processLocalLog(String logFolder) {
-    String logFileName = jMeterResultsConfig.getConfig("jmeter-logs.result-file");
-    String infoFileName = jMeterResultsConfig.getConfig("jmeter-logs.info-file");
-
-    LOG.info("Processing results. File: {}", logFolder + File.separator + logFileName);
-    LOG.info("Processing results. Ramp Duration: {}",
-            getJMeterRampDuration(logFolder + File.separator + infoFileName));
-
-    return processLocalLog(logFolder + File.separator + logFileName,
-            getJMeterRampDuration(logFolder + File.separator + infoFileName));
-  }
-
-  private String processLocalLog(String jMeterXMLLog, int jMeterRampDuration) {
+  private String processLocalLog(String jMeterXMLLog, int jMeterRampDuration, String jMeterSuccessCodes) {
     baseFolder = Paths.get(jMeterXMLLog).getParent().toString();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-mm-dd_HHmmss");
     currentTime = sdf.format(new Date());
@@ -83,7 +90,7 @@ public class JMeterLogAnalyzer {
     JMeterXMLLogParser jMeterXMLLogParser = new JMeterXMLLogParser();
 
     try {
-      jMeterResults = jMeterXMLLogParser.readDataFromXML(validateAndFixXML(jMeterXMLLog));
+      jMeterResults = jMeterXMLLogParser.readDataFromXML(validateAndFixXML(jMeterXMLLog), jMeterSuccessCodes);
 
       // System.out.println("Finished reading log file: " + jMeterResults.getSampleCount());
 
@@ -113,17 +120,30 @@ public class JMeterLogAnalyzer {
     return reportFileName;
   }
 
-  private void processS3Logs() {
-        /*
-        Basic algorithm:
-            For all log files in the input folder:
-                Download and Unzip log file
-                Process jmeter log file (result should be saved in the same folder)
-                Upload report and metadata to the results folder
-                Zip everything and upload to processed folder
-                Delete log from local temp folder
-                Delete log from input folder
-         */
+  private String processLocalLog(String logFolder, String jMeterSuccessCodes) {
+    String logFileName = jMeterResultsConfig.getConfig("jmeter-logs.result-file");
+    String infoFileName = jMeterResultsConfig.getConfig("jmeter-logs.info-file");
+
+    LOG.info("Processing results. File: {}", logFolder + File.separator + logFileName);
+    LOG.info("Processing results. Ramp Duration: {}",
+        getJMeterRampDuration(logFolder + File.separator + infoFileName));
+
+    return processLocalLog(logFolder + File.separator + logFileName,
+        getJMeterRampDuration(logFolder + File.separator + infoFileName),
+        jMeterSuccessCodes);
+  }
+
+  private void processS3Logs(String jMeterSuccessCodes) {
+    /*
+    Basic algorithm:
+        For all log files in the input folder:
+            Download and Unzip log file
+            Process jmeter log file (result should be saved in the same folder)
+            Upload report and metadata to the results folder
+            Zip everything and upload to processed folder
+            Delete log from local temp folder
+            Delete log from input folder
+    */
 
     LOG.info("S3: " + jMeterResultsConfig.getConfig("s3.name"));
     LOG.info("S3 input: " + jMeterResultsConfig.getConfig("s3-input.key"));
@@ -152,7 +172,7 @@ public class JMeterLogAnalyzer {
                 unzippedFolder.lastIndexOf("/") + 1, unzippedFolder.length());
         List<String> filesToUpload = new ArrayList<>();
 
-        String reportFile = processLocalLog(unzippedFolder);
+        String reportFile = processLocalLog(unzippedFolder, jMeterSuccessCodes);
 
         filesToUpload.add(reportFile);
 
@@ -398,7 +418,7 @@ public class JMeterLogAnalyzer {
         ex.printStackTrace();
       } catch (IllegalStateException ex) {
         LOG.warn("Failed to verify the file. Will assume it is valid because it is most " +
-            "likely problem with validation (which should be addressed.");
+            "likely problem with validation (which should be addressed.)");
         LOG.warn("Current line: {}", line);
 
         File tmpFileObject = new File(tmpFile);
