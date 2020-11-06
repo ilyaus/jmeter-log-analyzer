@@ -64,20 +64,6 @@ public class JMeterLogAnalyzer {
     }
   }
 
-//  private String processLocalLog(CommandLine commandLine) {
-//    jMeterXMLLog = commandLine.hasOption(JMETER_LOG_FILE_XML) ?
-//            commandLine.getOptionValue(JMETER_LOG_FILE_XML) :
-//            CommandLineOptions.getDefault(JMETER_LOG_FILE_XML);
-//
-//    jMeterRampDuration =
-//            Integer.parseInt(commandLine.hasOption(JMETER_RAMP_DURATION) ?
-//                    commandLine.getOptionValue(JMETER_RAMP_DURATION) :
-//                    jMeterResultsConfig.getConfig("jmeter-logs.ramp-duration"));
-//
-//    return processLocalLog(jMeterXMLLog, jMeterRampDuration);
-//  }
-
-
   private String processLocalLog(String jMeterXMLLog, int jMeterRampDuration, String jMeterSuccessCodes) {
     baseFolder = Paths.get(jMeterXMLLog).getParent().toString();
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-mm-dd_HHmmss");
